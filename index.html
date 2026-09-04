@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나만의 글쓰기 공간</title>
+
+    <!-- 구글 기본 폰트 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang&family=Gowun+Dodum&family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- 🌟 눈누 커스텀 웹 폰트 🌟 -->
+    <style>
+        @font-face {
+            font-family: 'GangwonEducationModuche';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2201-2@1.0/GangwonEdu_OTFLightA.woff') format('woff');
+            font-weight: 300; font-display: swap;
+        }
+        @import url('https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css');
+        @font-face {
+            font-family: 'RoundedFixedsys';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+            font-weight: normal; font-display: swap;
+        }
+        @font-face {
+            font-family: 'ChosunIlboMyungjo';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/Chosunilbo_myungjo.woff') format('woff');
+            font-weight: normal; font-display: swap;
+        }
+        @font-face {
+            font-family: 'GMarketSans';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansLight.woff') format('woff');
+            font-weight: 300; font-display: swap;
+        }
+        @font-face {
+            font-family: 'GMarketSans';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
+            font-weight: 500; font-display: swap;
+        }
+        @font-face {
+            font-family: 'GMarketSans';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
+            font-weight: 700; font-display: swap;
+        }
+    </style>
+
+    <style>
+        :root {
+            --bg-color: #F5F5F7;
+            --toolbar-bg: #FFFFFF;
+            --border-color: #E5E5EA;
+            --text-main: #1C1C1E;
+            --text-sub: #8E8E93;
+            --primary: #0A84FF;
+            --danger: #FF453A;
+            --a4-height: 1123px; /* A4 용지 세로 기준 */
+        }
+
+        * { box-sizing: border-box; }
+
+        body, html {
+            margin: 0; padding: 0; 
+            width: 100%; height: 100vh;
+            background-color: var(--bg-color);
+            font-family: 'Noto Sans KR', sans-serif;
+            color: var(--text-main);
+            display: flex; overflow: hidden;
+            overscroll-behavior: none; /* 아이패드 스크롤 바운스 방지 */
+        }
+
+        /* 🌟 사이드바 */
+        .sidebar {
+            width: 280px; background-color: #FAFAFC;
+            border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px; border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .sidebar-header h2 { margin: 0; font-size: 16px; font-weight: 700; }
+
+        .btn-new-folder {
+            background: #E5E5EA; color: var(--text-main);
+            border: none; padding: 6px 12px; border-radius: 6px;
+            font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .btn-new-folder:hover { background: #D1D1D6; }
+
+        .doc-list-container { flex: 1; overflow-y: auto; padding: 10px; }
+
+        .folder-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 10px; background: #E5E5EA; border-radius: 8px; 
+            margin-bottom: 6px; cursor: pointer; transition: 0.2s;
+        }
+        .folder-header:hover { background: #D1D1D6; }
+        .folder-title { font-weight: 700; font-size: 14px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        
+        .btn-icon {
+            background: none; border: none; cursor: pointer; font-size: 16px;
+            padding: 2px 6px; border-radius: 4px; color: var(--text-main); transition: 0.2s;
+        }
+        .btn-icon:hover { background: rgba(0,0,0,0.1); }
+        .btn-icon.danger:hover { background: #FFE5E5; color: var(--danger); }
+
+        .folder-docs {
+            padding-left: 12px; border-left: 2px solid #E5E5EA;
+            margin-left: 10px; margin-bottom: 15px;
+        }
+
+        .empty-doc { font-size: 12px; color: var(--text-sub); padding: 10px; }
+
+        .doc-item {
+            padding: 12px 15px; margin-bottom: 6px;
+            background: white; border-radius: 8px;
+            border: 1px solid var(--border-color); cursor: pointer;
+            transition: 0.2s; display: flex; flex-direction: column; gap: 4px;
+            position: relative;
+        }
+        .doc-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: #C6C6C8; }
+        .doc-item.active { border-color: var(--primary); background: #F0F8FF; }
+        .doc-title { font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 20px;}
+        .doc-date { font-size: 11px; color: var(--text-sub); }
+        
+        .btn-delete {
+            position: absolute; right: 8px; top: 10px;
+            background: none; border: none; color: #C6C6C8;
+            cursor: pointer; font-size: 14px; padding: 2px;
+        }
+        .btn-delete:hover { color: var(--danger); }
+
+        /* 🌟 메인 에디터 영역 */
+        .main-content {
+            flex: 1; display: flex; flex-direction: column; position: relative;
+        }
+
+        /* 🌟 툴바 */
+        .toolbar {
+            background-color: var(--toolbar-bg); border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02); z-index: 50; justify-content: space-between;
+        }
+        
+        .toolbar-left, .toolbar-right { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+        .tool-group { display: flex; align-items: center; gap: 8px; }
+        .tool-group label { font-size: 12px; font-weight: 600; color: var(--text-sub); }
+
+        select, input[type="number"], input[type="color"] {
+            padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 6px;
+            font-size: 13px; outline: none; background: #FAFAFC;
+        }
+        select:focus, input[type="number"]:focus { border-color: var(--primary); }
+        input[type="color"] { padding: 2px 5px; cursor: pointer; }
+
+        .paper-toggle { display: flex; background: #E5E5EA; border-radius: 8px; padding: 2px; }
+        .paper-toggle input { display: none; }
+        .paper-toggle label {
+            padding: 6px 12px; font-size: 12px; font-weight: 600;
+            border-radius: 6px; cursor: pointer; transition: 0.2s; color: var(--text-sub);
+        }
+        .paper-toggle input:checked + label { background: white; color: var(--text-main); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        /* 버튼 스타일 */
+        .btn-action {
+            border: none; padding: 8px 14px; border-radius: 8px;
+            font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .btn-action:hover { transform: translateY(-1px); }
+        .btn-action:active { transform: translateY(0); }
+        
+        .btn-download { background-color: #34C759; color: white; }
+        .btn-download:hover { box-shadow: 0 4px 10px rgba(52, 199, 89, 0.3); }
+        
+        .btn-sync { background-color: #5E5CE6; color: white; }
+        .btn-sync:hover { box-shadow: 0 4px 10px rgba(94, 92, 230, 0.3); }
+        .btn-sync.active { background-color: #FF9F0A; color: white; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+
+        /* 🌟 그리기 펜 모드 버튼 🌟 */
+        .btn-draw { background-color: #E5E5EA; color: var(--text-main); }
+        .btn-draw.active { background-color: #FF2D55; color: white; box-shadow: 0 4px 10px rgba(255, 45, 85, 0.3); }
+
+        /* 🌟 종이 캔버스 및 페이지 자동 분할 영역 🌟 */
+        .editor-container {
+            flex: 1; overflow-y: auto; padding: 40px 20px; display: flex; justify-content: center;
+            align-items: flex-start; /* 종이가 위에서부터 시작하도록 */
+        }
+
+        .paper {
+            width: 100%; max-width: 794px; min-height: var(--a4-height);
+            background-color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            position: relative; /* 캔버스와 마커의 절대 위치 기준 */
+            transition: background-color 0.3s;
+        }
+
+        /* 텍스트가 입력되는 실제 레이어 */
+        #textLayer {
+            position: relative; z-index: 10;
+            padding: 60px 50px; /* 기존 paper의 패딩을 이쪽으로 이동 */
+            min-height: var(--a4-height);
+        }
+
+        .paper-title {
+            width: 100%; border: none; outline: none; font-size: 28px; font-weight: 700;
+            margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--border-color); background: transparent;
+        }
+
+        .paper-content {
+            width: 100%; min-height: 800px; outline: none; word-break: keep-all; white-space: pre-wrap;
+        }
+
+        /* 🌟 그리기 캔버스 🌟 */
+        #drawCanvas {
+            position: absolute; top: 0; left: 0; z-index: 5; /* 기본은 글씨 밑 */
+            pointer-events: none; touch-action: none;
+        }
+
+        /* 🌟 페이지 구분선 및 푸터 🌟 */
+        #pageMarkers {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
+        }
+
+        .page-divider {
+            position: absolute; width: 100%; left: 0;
+            border-top: 2px dashed #C6C6C8;
+        }
+
+        .page-footer {
+            position: absolute; width: 100%; left: 0; padding: 0 50px;
+            display: flex; justify-content: space-between; align-items: flex-end;
+            color: #A1A1A6; font-size: 11px; font-family: sans-serif;
+        }
+        .footer-dates { display: flex; flex-direction: column; gap: 4px; }
+        .footer-page { font-size: 13px; font-weight: bold; }
+
+        /* 🌟 원고지 테마 */
+        .theme-manuscript .paper {
+            background-color: #FDFCF8; border: 1px solid #D2691E; box-shadow: 0 10px 30px rgba(210, 105, 30, 0.1);
+        }
+        .theme-manuscript .paper-title { color: #8B4513; border-bottom-color: #D2691E; }
+        .theme-manuscript .paper-content {
+            background-image: repeating-linear-gradient(to bottom, transparent, transparent 39px, rgba(210, 105, 30, 0.4) 39px, rgba(210, 105, 30, 0.4) 40px);
+            line-height: 40px; padding-top: 4px; color: #3e2723;
+        }
+
+        .status-msg {
+            position: absolute; bottom: 20px; right: 30px; background: rgba(0,0,0,0.8); color: white;
+            padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100;
+        }
+        .status-msg.show { opacity: 1; }
+
+    </style>
+</head>
+<body>
+
+    <!-- 사이드바 -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>보관함</h2>
+            <button class="btn-new-folder" onclick="createNewFolder()">+ 새 폴더</button>
+        </div>
+        <div class="doc-list-container" id="docListContainer">
+            <!-- 동적으로 폴더 및 파일 렌더링 -->
+        </div>
+    </div>
+
+    <!-- 메인 에디터 영역 -->
+    <div class="main-content">
+        
+        <!-- 설정 툴바 -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <div class="tool-group">
+                    <label>서체</label>
+                    <select id="sel-font" onchange="applySettings()">
+                        <option value="'Noto Serif KR', serif">노토 명조</option>
+                        <option value="'Noto Sans KR', sans-serif">노토 고딕</option>
+                        <option value="'Gowun Batang', serif">고운 바탕</option>
+                        <option value="'Gowun Dodum', sans-serif">고운 돋움</option>
+                        <option value="'GangwonEducationModuche', sans-serif">강원교육모두체</option>
+                        <option value="mona, sans-serif">픽셀 폰트(Mona)</option>
+                        <option value="'RoundedFixedsys', monospace">둥근모 픽셀</option>
+                        <option value="'ChosunIlboMyungjo', serif">조선일보명조체</option>
+                        <option value="'GMarketSans', sans-serif">G마켓 산스</option>
+                    </select>
+                </div>
+
+                <div class="tool-group">
+                    <label>크기</label>
+                    <input type="number" id="sel-size" value="16" min="10" max="40" style="width: 50px;" onchange="applySettings()">
+                </div>
+
+                <div class="tool-group">
+                    <label>펜/글자색</label>
+                    <input type="color" id="sel-color" value="#1C1C1E" onchange="applySettings()">
+                </div>
+
+                <div class="tool-group">
+                    <label>자간</label>
+                    <input type="number" id="sel-spacing" value="0" min="-2" max="10" step="0.5" style="width: 50px;" onchange="applySettings()">
+                </div>
+
+                <div class="tool-group">
+                    <div class="paper-toggle">
+                        <input type="radio" name="paperType" id="type-a4" value="a4" checked onchange="applySettings()">
+                        <label for="type-a4">A4</label>
+                        <input type="radio" name="paperType" id="type-manu" value="manuscript" onchange="applySettings()">
+                        <label for="type-manu">원고지</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="toolbar-right">
+                <!-- 🌟 그리기 펜 모드 버튼 🌟 -->
+                <button id="btnDraw" class="btn-action btn-draw" onclick="toggleDrawMode()">
+                    ✍️ 펜 끄기
+                </button>
+                <button id="btnSync" class="btn-action btn-sync" onclick="setupCloudRoom()">
+                    ☁️ 동기화 방
+                </button>
+                <button class="btn-action btn-download" onclick="downloadCurrentDoc()">
+                    💾 다운로드
+                </button>
+            </div>
+        </div>
+
+        <!-- 🌟 종이 및 캔버스 영역 🌟 -->
+        <div class="editor-container" id="editorContainer">
+            <div class="paper" id="paperElement">
+                <!-- 동적으로 페이지 구분선과 정보가 생성되는 곳 -->
+                <div id="pageMarkers"></div>
+                
+                <!-- 그리기용 캔버스 -->
+                <canvas id="drawCanvas"></canvas>
+                
+                <!-- 실제 글이 들어가는 곳 -->
+                <div id="textLayer">
+                    <input type="text" class="paper-title" id="docTitle" placeholder="제목을 입력하세요" oninput="autoSave()">
+                    <div class="paper-content" id="docContent" contenteditable="true" placeholder="당신의 이야기를 적어보세요..." oninput="autoSave()"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-msg" id="statusMsg">자동 저장됨</div>
+    </div>
+
+    <script>
+        // DOM 요소
+        const containerEl = document.getElementById('docListContainer');
+        const docTitleEl = document.getElementById('docTitle');
+        const docContentEl = document.getElementById('docContent');
+        const editorContainer = document.getElementById('editorContainer');
+        const paperElement = document.getElementById('paperElement');
+        const textLayer = document.getElementById('textLayer');
+        const pageMarkers = document.getElementById('pageMarkers');
+        const statusMsg = document.getElementById('statusMsg');
+        const btnSync = document.getElementById('btnSync');
+        const btnDraw = document.getElementById('btnDraw');
+        
+        const selFont = document.getElementById('sel-font');
+        const selSize = document.getElementById('sel-size');
+        const selColor = document.getElementById('sel-color');
+        const selSpacing = document.getElementById('sel-spacing');
+
+        // 🌟 캔버스 세팅 🌟
+        const canvas = document.getElementById('drawCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawingMode = false;
+        let isDrawing = false;
+        let PAGE_HEIGHT = 1123; // A4 세로 픽셀 기준
+
+        let appData = { folders: [], docs: [] };
+        let currentDocId = null;
+        let openFolders = new Set(['default']); 
+        let saveTimeout = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('room');
+
+        // 1. 초기화 & 마이그레이션
+        async function init() {
+            if (roomId) {
+                await loadFromCloud(roomId);
+            } else {
+                const savedData = localStorage.getItem('myWriterDocsData');
+                if (savedData) {
+                    const parsed = JSON.parse(savedData);
+                    if (Array.isArray(parsed)) {
+                        appData = { folders: [{ id: 'default', name: '기본 폴더' }], docs: parsed.map(d => ({ ...d, folderId: 'default' })) };
+                    } else {
+                        appData = parsed;
+                    }
+                } else {
+                    appData = { folders: [{ id: 'default', name: '기본 폴더' }], docs: [] };
+                }
+            }
+
+            // 모든 문서에 생성/수정일 보장
+            appData.docs = appData.docs.map(d => ({
+                ...d,
+                createdAt: d.createdAt || d.updatedAt || Date.now(),
+                updatedAt: d.updatedAt || Date.now(),
+                drawing: d.drawing || null
+            }));
+
+            if (appData.folders.length === 0) appData.folders.push({ id: 'default', name: '기본 폴더' });
+            if (appData.docs.length === 0) createNewDoc('default');
+            else {
+                const latestDoc = [...appData.docs].sort((a, b) => b.updatedAt - a.updatedAt)[0];
+                loadDoc(latestDoc.id);
+                openFolders.add(latestDoc.folderId);
+            }
+
+            if (roomId) {
+                btnSync.classList.add('active');
+                btnSync.innerHTML = "🟢 동기화 됨";
+            }
+
+            renderSidebar();
+            
+            // 🌟 텍스트 높이 변화 감지하여 자동 페이지 및 캔버스 리사이즈 🌟
+            const resizeObserver = new ResizeObserver(() => {
+                requestAnimationFrame(() => updatePaginationAndCanvas());
+            });
+            resizeObserver.observe(textLayer);
+        }
+
+        // ================= 🌟 날짜 포맷 함수 🌟 =================
+        function formatDate(ts) {
+            if(!ts) return '';
+            const d = new Date(ts);
+            return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        }
+
+        // ================= 🌟 자동 페이징 및 캔버스 연동 🌟 =================
+        function updatePaginationAndCanvas(forceRedraw = false) {
+            const doc = appData.docs.find(d => d.id === currentDocId);
+            if(!doc) return;
+            
+            // 텍스트 레이어의 실제 높이에 맞춰 필요한 총 페이지 수 계산
+            const contentHeight = textLayer.offsetHeight;
+            const totalPages = Math.max(1, Math.ceil(contentHeight / PAGE_HEIGHT));
+            const newPaperHeight = totalPages * PAGE_HEIGHT;
+            
+            let needsResize = paperElement.offsetHeight !== newPaperHeight || forceRedraw;
+            
+            if (needsResize) {
+                // 캔버스 사이즈가 바뀌면 내용이 날아가므로 백업
+                let dataToRestore = forceRedraw ? (doc.drawing || null) : canvas.toDataURL();
+                
+                // 종이 크기를 정확한 A4 배수로 확장
+                paperElement.style.height = `${newPaperHeight}px`;
+                
+                // 캔버스 크기 맞춤 (고해상도 대응)
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = paperElement.offsetWidth * dpr;
+                canvas.height = newPaperHeight * dpr;
+                canvas.style.width = `${paperElement.offsetWidth}px`;
+                canvas.style.height = `${newPaperHeight}px`;
+                ctx.scale(dpr, dpr);
+                
+                // 기존 그림 복구
+                if (dataToRestore && dataToRestore !== 'data:,') {
+                    const img = new Image();
+                    img.onload = () => { ctx.drawImage(img, 0, 0, paperElement.offsetWidth, newPaperHeight); }
+                    img.src = dataToRestore;
+                }
+                
+                // 🌟 페이지 구분선 및 좌/우 하단 정보(날짜, 쪽수) 렌더링 🌟
+                pageMarkers.innerHTML = '';
+                for(let i=1; i<=totalPages; i++) {
+                    const footer = document.createElement('div');
+                    footer.className = 'page-footer';
+                    // 페이지 맨 밑단에서 60px 위에 위치
+                    footer.style.top = `${i * PAGE_HEIGHT - 60}px`; 
+                    
+                    footer.innerHTML = `
+                        <div class="footer-dates">
+                            <div>생성일: ${formatDate(doc.createdAt)}</div>
+                            ${doc.updatedAt !== doc.createdAt ? `<div>수정일: ${formatDate(doc.updatedAt)}</div>` : ''}
+                        </div>
+                        <div class="footer-page">- ${i} / ${totalPages} -</div>
+                    `;
+                    pageMarkers.appendChild(footer);
+                    
+                    // 마지막 페이지가 아니면 절취선 렌더링
+                    if(i < totalPages) {
+                        const line = document.createElement('div');
+                        line.className = 'page-divider';
+                        line.style.top = `${i * PAGE_HEIGHT}px`;
+                        pageMarkers.appendChild(line);
+                    }
+                }
+            } else {
+                // 높이는 그대로여도 수정일이 바뀌었을 수 있으므로 텍스트만 업데이트
+                const footers = document.querySelectorAll('.page-footer');
+                footers.forEach(f => {
+                    const datesDiv = f.querySelector('.footer-dates');
+                    if(datesDiv) {
+                        datesDiv.innerHTML = `
+                            <div>생성일: ${formatDate(doc.createdAt)}</div>
+                            ${doc.updatedAt !== doc.createdAt ? `<div>수정일: ${formatDate(doc.updatedAt)}</div>` : ''}
+                        `;
+                    }
+                });
+            }
+        }
+
+        // ================= 🌟 아이패드 펜 그리기 모드 🌟 =================
+        function toggleDrawMode() {
+            isDrawingMode = !isDrawingMode;
+            if(isDrawingMode) {
+                btnDraw.classList.add('active');
+                btnDraw.textContent = '✍️ 펜 켜짐';
+                canvas.style.pointerEvents = 'auto'; // 캔버스 터치 활성화
+                canvas.style.zIndex = '20'; // 텍스트 위로 올림
+                textLayer.style.pointerEvents = 'none'; // 글쓰기 잠금
+            } else {
+                btnDraw.classList.remove('active');
+                btnDraw.textContent = '✍️ 펜 끄기';
+                canvas.style.pointerEvents = 'none'; // 캔버스 터치 무시
+                canvas.style.zIndex = '5'; // 텍스트 아래로 내림
+                textLayer.style.pointerEvents = 'auto'; // 글쓰기 활성화
+            }
+        }
+
+        canvas.addEventListener('pointerdown', (e) => {
+            if(!isDrawingMode) return;
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            ctx.beginPath();
+            ctx.moveTo((e.clientX - rect.left), (e.clientY - rect.top));
+        });
+
+        canvas.addEventListener('pointermove', (e) => {
+            if(!isDrawing || !isDrawingMode) return;
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineTo((e.clientX - rect.left), (e.clientY - rect.top));
+            ctx.strokeStyle = selColor.value; // 현재 선택된 색상 사용
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+        });
+
+        const stopDrawing = () => {
+            if(isDrawing) {
+                isDrawing = false;
+                autoSave(); // 선 긋기가 끝나면 캔버스 데이터 저장
+            }
+        };
+        canvas.addEventListener('pointerup', stopDrawing);
+        canvas.addEventListener('pointercancel', stopDrawing);
+        canvas.addEventListener('pointerleave', stopDrawing);
+
+
+        // ================= 기존 로직 (클라우드, 로딩 등) =================
+
+        async function setupCloudRoom() {
+            if (roomId) {
+                alert("이미 이 방에 연동되어 있습니다.\n현재 주소창의 링크를 복사해 다른 기기에서 열어보세요!"); return;
+            }
+            try {
+                showToast("클라우드 방 생성 중... 잠시만 기다려주세요.");
+                const response = await fetch('https://jsonblob.com/api/jsonBlob', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify(appData)
+                });
+                const locationHeader = response.headers.get('Location');
+                if (locationHeader) {
+                    const newRoomId = locationHeader.split('/').pop();
+                    window.history.replaceState(null, '', `?room=${newRoomId}`);
+                    alert(`✅ 동기화 방 생성 완료!\n\n방 번호: ${newRoomId}\n현재 주소창의 링크를 복사해서 스마트폰이나 아이패드에서 접속하면 이 글과 동기화됩니다.`);
+                    window.location.reload(); 
+                } else { alert('방 생성에 실패했습니다.'); }
+            } catch (e) { alert('인터넷 연결을 확인해주세요.'); }
+        }
+
+        async function loadFromCloud(id) {
+            try {
+                showToast("클라우드 데이터 불러오는 중...");
+                const response = await fetch(`https://jsonblob.com/api/jsonBlob/${id}`);
+                if (response.ok) {
+                    appData = await response.json();
+                    localStorage.setItem('myWriterDocsData', JSON.stringify(appData));
+                    showToast("☁️ 클라우드 동기화 완료!");
+                } else {
+                    alert('유효하지 않은 방 번호입니다. 로컬 데이터로 시작합니다.');
+                    window.history.replaceState(null, '', window.location.pathname);
+                    appData = { folders: [{ id: 'default', name: '기본 폴더' }], docs: [] };
+                }
+            } catch (e) { alert('클라우드 서버와 연결할 수 없습니다.'); }
+        }
+
+        async function syncToCloud() {
+            if (!roomId) return;
+            try {
+                await fetch(`https://jsonblob.com/api/jsonBlob/${roomId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(appData)
+                });
+                showToast("☁️ 클라우드에 저장됨");
+            } catch (e) { showToast("⚠️ 클라우드 저장 실패"); }
+        }
+
+        function renderSidebar() {
+            containerEl.innerHTML = '';
+            appData.folders.forEach(folder => {
+                const fHeader = document.createElement('div');
+                fHeader.className = 'folder-header';
+                
+                const fTitle = document.createElement('div');
+                fTitle.className = 'folder-title';
+                fTitle.textContent = `${openFolders.has(folder.id) ? '📂' : '📁'} ${folder.name}`;
+                fTitle.onclick = () => {
+                    if (openFolders.has(folder.id)) openFolders.delete(folder.id);
+                    else openFolders.add(folder.id);
+                    renderSidebar();
+                };
+
+                const btnAdd = document.createElement('button');
+                btnAdd.className = 'btn-icon';
+                btnAdd.textContent = '+';
+                btnAdd.title = '이 폴더에 새 글 쓰기';
+                btnAdd.onclick = (e) => { e.stopPropagation(); createNewDoc(folder.id); };
+
+                fHeader.appendChild(fTitle);
+                fHeader.appendChild(btnAdd);
+
+                if (folder.id !== 'default') {
+                    const btnDel = document.createElement('button');
+                    btnDel.className = 'btn-icon danger';
+                    btnDel.textContent = '✕';
+                    btnDel.title = '폴더 삭제';
+                    btnDel.onclick = (e) => { e.stopPropagation(); deleteFolder(folder.id); };
+                    fHeader.appendChild(btnDel);
+                }
+
+                containerEl.appendChild(fHeader);
+
+                if (openFolders.has(folder.id)) {
+                    const fDocs = document.createElement('div');
+                    fDocs.className = 'folder-docs';
+                    
+                    const docsInFolder = appData.docs.filter(d => d.folderId === folder.id).sort((a,b) => b.updatedAt - a.updatedAt);
+                    
+                    if(docsInFolder.length === 0) {
+                        const empty = document.createElement('div');
+                        empty.className = 'empty-doc';
+                        empty.textContent = '작성된 글이 없습니다.';
+                        fDocs.appendChild(empty);
+                    }
+
+                    docsInFolder.forEach(doc => {
+                        const item = document.createElement('div');
+                        item.className = `doc-item ${doc.id === currentDocId ? 'active' : ''}`;
+                        item.onclick = () => loadDoc(doc.id);
+
+                        const title = document.createElement('div');
+                        title.className = 'doc-title';
+                        title.textContent = doc.title || '제목 없는 문서';
+
+                        const date = document.createElement('div');
+                        date.className = 'doc-date';
+                        const d = new Date(doc.updatedAt);
+                        date.textContent = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+
+                        const delBtn = document.createElement('button');
+                        delBtn.className = 'btn-delete';
+                        delBtn.textContent = '✕';
+                        delBtn.onclick = (e) => { e.stopPropagation(); deleteDoc(doc.id); };
+
+                        item.appendChild(title);
+                        item.appendChild(date);
+                        item.appendChild(delBtn);
+                        fDocs.appendChild(item);
+                    });
+                    containerEl.appendChild(fDocs);
+                }
+            });
+        }
+
+        function createNewFolder() {
+            const name = prompt("새 폴더 이름을 입력하세요:");
+            if (!name || !name.trim()) return;
+            const newFolder = { id: 'f_' + Date.now(), name: name.trim() };
+            appData.folders.push(newFolder);
+            openFolders.add(newFolder.id);
+            saveDataTrigger();
+            renderSidebar();
+        }
+
+        function deleteFolder(id) {
+            if(!confirm('폴더를 삭제하시겠습니까?\n폴더 안의 모든 글도 함께 삭제됩니다.')) return;
+            appData.folders = appData.folders.filter(f => f.id !== id);
+            appData.docs = appData.docs.filter(d => d.folderId !== id);
+            saveDataTrigger();
+            
+            if (!appData.docs.find(d => d.id === currentDocId)) {
+                if (appData.docs.length > 0) loadDoc(appData.docs[0].id);
+                else createNewDoc('default');
+            } else {
+                renderSidebar();
+            }
+        }
+
+        function createNewDoc(folderId) {
+            const now = Date.now();
+            const newDoc = {
+                id: now,
+                folderId: folderId,
+                title: '',
+                content: '',
+                createdAt: now,
+                updatedAt: now,
+                drawing: null, // 그림 데이터 저장용
+                settings: { font: "'Noto Serif KR', serif", size: '16', color: '#1C1C1E', spacing: '0', paper: 'a4' }
+            };
+            appData.docs.push(newDoc);
+            openFolders.add(folderId);
+            saveDataTrigger();
+            loadDoc(newDoc.id);
+            docTitleEl.focus();
+        }
+
+        function loadDoc(id) {
+            const doc = appData.docs.find(d => d.id === id);
+            if (!doc) return;
+            
+            currentDocId = id;
+            docTitleEl.value = doc.title;
+            docContentEl.innerHTML = doc.content;
+
+            if (doc.settings) {
+                selFont.value = doc.settings.font;
+                selSize.value = doc.settings.size;
+                selColor.value = doc.settings.color;
+                selSpacing.value = doc.settings.spacing;
+                if (doc.settings.paper === 'manuscript') document.getElementById('type-manu').checked = true;
+                else document.getElementById('type-a4').checked = true;
+            }
+            
+            applySettings();
+            
+            // 글 변경 시 캔버스 지우고 해당 글의 그림 복원 지시
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            updatePaginationAndCanvas(true); 
+            
+            renderSidebar();
+        }
+
+        function deleteDoc(id) {
+            if(!confirm('이 글을 삭제하시겠습니까?')) return;
+            appData.docs = appData.docs.filter(d => d.id !== id);
+            saveDataTrigger();
+            if (appData.docs.length === 0) createNewDoc('default');
+            else if (currentDocId === id) loadDoc(appData.docs[0].id);
+            else renderSidebar();
+        }
+
+        // 문서 다운로드 시 글만 추출
+        function downloadCurrentDoc() {
+            const doc = appData.docs.find(d => d.id === currentDocId);
+            if (!doc) return;
+            
+            // 캔버스 그림은 txt에 담을 수 없으므로 텍스트만 다운로드
+            const textToSave = `제목: ${doc.title || '제목 없음'}\n\n${docContentEl.innerText}`;
+            const blob = new Blob([textToSave], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${doc.title || '제목없는문서'}.txt`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        function applySettings() {
+            const font = selFont.value;
+            const size = selSize.value + 'px';
+            const color = selColor.value;
+            const spacing = selSpacing.value + 'px';
+            const paperType = document.querySelector('input[name="paperType"]:checked').value;
+
+            docContentEl.style.fontFamily = font;
+            docContentEl.style.fontSize = size;
+            docContentEl.style.color = color;
+            docContentEl.style.letterSpacing = spacing;
+            docTitleEl.style.fontFamily = font;
+            docTitleEl.style.color = color;
+
+            if (paperType === 'manuscript') {
+                editorContainer.classList.add('theme-manuscript');
+                docContentEl.style.lineHeight = '40px';
+            } else {
+                editorContainer.classList.remove('theme-manuscript');
+                docContentEl.style.lineHeight = '1.8';
+            }
+            autoSave(); 
+        }
+
+        function autoSave() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                const doc = appData.docs.find(d => d.id === currentDocId);
+                if (doc) {
+                    doc.title = docTitleEl.value;
+                    doc.content = docContentEl.innerHTML;
+                    doc.updatedAt = Date.now();
+                    doc.drawing = canvas.toDataURL(); // 그림 내용 저장
+                    doc.settings = {
+                        font: selFont.value, size: selSize.value,
+                        color: selColor.value, spacing: selSpacing.value,
+                        paper: document.querySelector('input[name="paperType"]:checked').value
+                    };
+                    saveDataTrigger();
+                    renderSidebar();
+                    updatePaginationAndCanvas(); // 저장일이 갱신되었으니 푸터 날짜 업데이트
+                }
+            }, 1000); 
+        }
+
+        function saveDataTrigger() {
+            localStorage.setItem('myWriterDocsData', JSON.stringify(appData));
+            showToast("로컬 저장 완료");
+            if (roomId) syncToCloud();
+        }
+
+        function showToast(msg) {
+            statusMsg.textContent = msg;
+            statusMsg.classList.add('show');
+            setTimeout(() => statusMsg.classList.remove('show'), 2000);
+        }
+
+        // 앱 시작
+        init();
+
+    </script>
+</body>
+</html>
