@@ -97,6 +97,7 @@
             display: flex; justify-content: space-between; align-items: center;
             padding: 12px 10px; background: #E5E5EA; border-radius: 8px; 
             margin-bottom: 6px; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
         }
         .folder-header:hover { background: #D1D1D6; }
         .folder-title { font-weight: 700; font-size: 14px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
@@ -170,7 +171,7 @@
         .btn-action {
             border: none; padding: 8px 14px; border-radius: 8px;
             font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s;
-            display: flex; align-items: center; gap: 6px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
         }
         .btn-action:hover { transform: translateY(-1px); }
         .btn-action:active { transform: translateY(0); }
@@ -183,9 +184,19 @@
         .btn-sync.active { background-color: #FF9F0A; color: white; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
 
-        /* 🌟 그리기 펜 모드 버튼 🌟 */
+        /* 🌟 그리기 펜 모드 버튼 & 도구 상자 🌟 */
         .btn-draw { background-color: #E5E5EA; color: var(--text-main); }
-        .btn-draw.active { background-color: #FF2D55; color: white; box-shadow: 0 4px 10px rgba(255, 45, 85, 0.3); }
+        .btn-draw.active { background-color: #0A84FF; color: white; box-shadow: 0 4px 10px rgba(10, 132, 255, 0.3); }
+        
+        .draw-tools {
+            display: none; align-items: center; gap: 10px;
+            background: #FAFAFC; padding: 4px 12px; border-radius: 8px; border: 1px solid var(--border-color);
+            margin-left: 10px;
+        }
+        .draw-tools.show { display: flex; }
+        
+        .btn-eraser { background: #E5E5EA; color: var(--text-main); border: 1px solid var(--border-color); padding: 6px 12px; }
+        .btn-eraser.active { background: #FF453A; color: white; border-color: #FF453A; }
 
         /* 🌟 종이 캔버스 및 페이지 자동 분할 영역 🌟 */
         .editor-container {
@@ -203,7 +214,7 @@
         /* 텍스트가 입력되는 실제 레이어 */
         #textLayer {
             position: relative; z-index: 10;
-            padding: 60px 50px; /* 기존 paper의 패딩을 이쪽으로 이동 */
+            padding: 60px 50px; 
             min-height: var(--a4-height);
         }
 
@@ -295,12 +306,12 @@
                 </div>
 
                 <div class="tool-group">
-                    <label>크기</label>
+                    <label>글자크기</label>
                     <input type="number" id="sel-size" value="16" min="10" max="40" style="width: 50px;" onchange="applySettings()">
                 </div>
 
                 <div class="tool-group">
-                    <label>펜/글자색</label>
+                    <label>글자색</label>
                     <input type="color" id="sel-color" value="#1C1C1E" onchange="applySettings()">
                 </div>
 
@@ -309,7 +320,7 @@
                     <input type="number" id="sel-spacing" value="0" min="-2" max="10" step="0.5" style="width: 50px;" onchange="applySettings()">
                 </div>
 
-                <div class="tool-group">
+                <div class="tool-group" style="margin-left: 10px;">
                     <div class="paper-toggle">
                         <input type="radio" name="paperType" id="type-a4" value="a4" checked onchange="applySettings()">
                         <label for="type-a4">A4</label>
@@ -322,8 +333,29 @@
             <div class="toolbar-right">
                 <!-- 🌟 그리기 펜 모드 버튼 🌟 -->
                 <button id="btnDraw" class="btn-action btn-draw" onclick="toggleDrawMode()">
-                    ✍️ 펜 끄기
+                    ✍️ 펜 켜기
                 </button>
+                
+                <!-- 🌟 그리기 전용 툴바 (펜 켰을 때만 표시) 🌟 -->
+                <div id="drawTools" class="draw-tools">
+                    <div class="tool-group" id="penColorGroup">
+                        <label>펜 색상</label>
+                        <input type="color" id="drawColor" value="#0A84FF">
+                    </div>
+                    <div class="tool-group" id="penSizeGroup">
+                        <label>굵기</label>
+                        <input type="number" id="drawSize" value="3" min="1" max="50" style="width: 45px;">
+                    </div>
+                    <div style="width: 1px; height: 20px; background: var(--border-color); margin: 0 5px;"></div>
+                    
+                    <button id="btnEraser" class="btn-action btn-eraser" onclick="toggleEraser()">지우개</button>
+                    
+                    <div class="tool-group" id="eraserSizeGroup" style="display: none;">
+                        <label>지우개 크기</label>
+                        <input type="number" id="eraserSize" value="20" min="1" max="100" style="width: 50px;">
+                    </div>
+                </div>
+
                 <button id="btnSync" class="btn-action btn-sync" onclick="setupCloudRoom()">
                     ☁️ 동기화 방
                 </button>
@@ -339,7 +371,7 @@
                 <!-- 동적으로 페이지 구분선과 정보가 생성되는 곳 -->
                 <div id="pageMarkers"></div>
                 
-                <!-- 그리기용 캔버스 -->
+                <!-- 그리기용 캔버스 (지우개 작동 시 텍스트 보존) -->
                 <canvas id="drawCanvas"></canvas>
                 
                 <!-- 실제 글이 들어가는 곳 -->
@@ -363,8 +395,11 @@
         const textLayer = document.getElementById('textLayer');
         const pageMarkers = document.getElementById('pageMarkers');
         const statusMsg = document.getElementById('statusMsg');
+        
         const btnSync = document.getElementById('btnSync');
         const btnDraw = document.getElementById('btnDraw');
+        const drawTools = document.getElementById('drawTools');
+        const btnEraser = document.getElementById('btnEraser');
         
         const selFont = document.getElementById('sel-font');
         const selSize = document.getElementById('sel-size');
@@ -375,6 +410,7 @@
         const canvas = document.getElementById('drawCanvas');
         const ctx = canvas.getContext('2d');
         let isDrawingMode = false;
+        let isEraserMode = false;
         let isDrawing = false;
         let PAGE_HEIGHT = 1123; // A4 세로 픽셀 기준
 
@@ -427,14 +463,14 @@
 
             renderSidebar();
             
-            // 🌟 텍스트 높이 변화 감지하여 자동 페이지 및 캔버스 리사이즈 🌟
+            // 텍스트 높이 변화 감지하여 자동 페이지 및 캔버스 리사이즈
             const resizeObserver = new ResizeObserver(() => {
                 requestAnimationFrame(() => updatePaginationAndCanvas());
             });
             resizeObserver.observe(textLayer);
         }
 
-        // ================= 🌟 날짜 포맷 함수 🌟 =================
+        // 날짜 포맷 함수
         function formatDate(ts) {
             if(!ts) return '';
             const d = new Date(ts);
@@ -466,16 +502,22 @@
                 canvas.height = newPaperHeight * dpr;
                 canvas.style.width = `${paperElement.offsetWidth}px`;
                 canvas.style.height = `${newPaperHeight}px`;
+                
+                // 스케일 세팅 후 기본 합성 모드를 덮어쓰기로 복구
                 ctx.scale(dpr, dpr);
+                ctx.globalCompositeOperation = 'source-over';
                 
                 // 기존 그림 복구
                 if (dataToRestore && dataToRestore !== 'data:,') {
                     const img = new Image();
-                    img.onload = () => { ctx.drawImage(img, 0, 0, paperElement.offsetWidth, newPaperHeight); }
+                    img.onload = () => { 
+                        ctx.globalCompositeOperation = 'source-over';
+                        ctx.drawImage(img, 0, 0, paperElement.offsetWidth, newPaperHeight); 
+                    }
                     img.src = dataToRestore;
                 }
                 
-                // 🌟 페이지 구분선 및 좌/우 하단 정보(날짜, 쪽수) 렌더링 🌟
+                // 페이지 구분선 및 좌/우 하단 정보(날짜, 쪽수) 렌더링
                 pageMarkers.innerHTML = '';
                 for(let i=1; i<=totalPages; i++) {
                     const footer = document.createElement('div');
@@ -515,21 +557,42 @@
             }
         }
 
-        // ================= 🌟 아이패드 펜 그리기 모드 🌟 =================
+        // ================= 🌟 아이패드 펜 & 지우개 모드 🌟 =================
         function toggleDrawMode() {
             isDrawingMode = !isDrawingMode;
             if(isDrawingMode) {
                 btnDraw.classList.add('active');
-                btnDraw.textContent = '✍️ 펜 켜짐';
+                btnDraw.textContent = '✍️ 펜 끄기';
+                drawTools.classList.add('show');
                 canvas.style.pointerEvents = 'auto'; // 캔버스 터치 활성화
                 canvas.style.zIndex = '20'; // 텍스트 위로 올림
                 textLayer.style.pointerEvents = 'none'; // 글쓰기 잠금
             } else {
                 btnDraw.classList.remove('active');
-                btnDraw.textContent = '✍️ 펜 끄기';
+                btnDraw.textContent = '✍️ 펜 켜기';
+                drawTools.classList.remove('show');
                 canvas.style.pointerEvents = 'none'; // 캔버스 터치 무시
                 canvas.style.zIndex = '5'; // 텍스트 아래로 내림
                 textLayer.style.pointerEvents = 'auto'; // 글쓰기 활성화
+            }
+        }
+
+        function toggleEraser() {
+            isEraserMode = !isEraserMode;
+            const penColorGroup = document.getElementById('penColorGroup');
+            const penSizeGroup = document.getElementById('penSizeGroup');
+            const eraserSizeGroup = document.getElementById('eraserSizeGroup');
+
+            if(isEraserMode) {
+                btnEraser.classList.add('active');
+                penColorGroup.style.display = 'none';
+                penSizeGroup.style.display = 'none';
+                eraserSizeGroup.style.display = 'flex';
+            } else {
+                btnEraser.classList.remove('active');
+                penColorGroup.style.display = 'flex';
+                penSizeGroup.style.display = 'flex';
+                eraserSizeGroup.style.display = 'none';
             }
         }
 
@@ -545,8 +608,19 @@
             if(!isDrawing || !isDrawingMode) return;
             const rect = canvas.getBoundingClientRect();
             ctx.lineTo((e.clientX - rect.left), (e.clientY - rect.top));
-            ctx.strokeStyle = selColor.value; // 현재 선택된 색상 사용
-            ctx.lineWidth = 3;
+            
+            if (isEraserMode) {
+                // 🌟 글씨는 건드리지 않고 캔버스의 그려진 픽셀만 투명하게 지움 🌟
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineWidth = document.getElementById('eraserSize').value || 20;
+                ctx.strokeStyle = "rgba(0,0,0,1)"; // 색상은 투명하게 뚫기 때문에 의미없음
+            } else {
+                // 일반 그리기 모드
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = document.getElementById('drawColor').value || '#0A84FF';
+                ctx.lineWidth = document.getElementById('drawSize').value || 3;
+            }
+            
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.stroke();
@@ -562,8 +636,7 @@
         canvas.addEventListener('pointercancel', stopDrawing);
         canvas.addEventListener('pointerleave', stopDrawing);
 
-
-        // ================= 기존 로직 (클라우드, 로딩 등) =================
+        // ================= 기존 로직 (클라우드, 문서 관리 등) =================
 
         async function setupCloudRoom() {
             if (roomId) {
@@ -724,7 +797,7 @@
                 content: '',
                 createdAt: now,
                 updatedAt: now,
-                drawing: null, // 그림 데이터 저장용
+                drawing: null,
                 settings: { font: "'Noto Serif KR', serif", size: '16', color: '#1C1C1E', spacing: '0', paper: 'a4' }
             };
             appData.docs.push(newDoc);
@@ -769,12 +842,9 @@
             else renderSidebar();
         }
 
-        // 문서 다운로드 시 글만 추출
         function downloadCurrentDoc() {
             const doc = appData.docs.find(d => d.id === currentDocId);
             if (!doc) return;
-            
-            // 캔버스 그림은 txt에 담을 수 없으므로 텍스트만 다운로드
             const textToSave = `제목: ${doc.title || '제목 없음'}\n\n${docContentEl.innerText}`;
             const blob = new Blob([textToSave], { type: 'text/plain;charset=utf-8' });
             const link = document.createElement('a');
@@ -824,7 +894,7 @@
                     };
                     saveDataTrigger();
                     renderSidebar();
-                    updatePaginationAndCanvas(); // 저장일이 갱신되었으니 푸터 날짜 업데이트
+                    updatePaginationAndCanvas(); 
                 }
             }, 1000); 
         }
